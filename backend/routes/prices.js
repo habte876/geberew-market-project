@@ -52,4 +52,32 @@ router.post(
   },
 );
 
+// PATCH /prices/:id/verify — operator approves a pending price
+router.patch("/:id/verify", async (req, res) => {
+  const { id } = req.params;
+  const { verifiedBy } = req.body;
+
+  if (!verifiedBy) {
+    return res.status(400).json({ error: "verifiedBy is required" });
+  }
+
+  try {
+    const result = await sql`
+      UPDATE prices
+      SET is_verified = true, verified_by = ${verifiedBy}
+      WHERE id = ${id}
+      RETURNING id, is_verified, verified_by
+    `;
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Price not found" });
+    }
+
+    res.json(result[0]);
+    // TODO: trigger SMS fanout here once Task 5's SMS module exists
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
