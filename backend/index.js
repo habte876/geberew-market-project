@@ -2,11 +2,13 @@ require("dotenv").config({ quiet: true });
 const express = require("express");
 const cors = require("cors");
 const { sql } = require("./db");
+const pricesRouter = require("./routes/prices");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/prices", pricesRouter);
 
 //Health check route - confirms the server and DB are both alive
 app.get("/health", async (req, res) => {
