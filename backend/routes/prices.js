@@ -80,4 +80,23 @@ router.patch("/:id/verify", async (req, res) => {
   }
 });
 
+// GET /prices/published — public list of currently visible prices
+router.get("/published", async (req, res) => {
+  try {
+    const result = await sql`
+      SELECT p.id, p.price_value, p.unit, p.effective_date,
+             c.name_en AS crop_name, m.name AS market_name
+      FROM prices p
+      JOIN crops c ON c.id = p.crop_id
+      JOIN markets m ON m.id = p.market_id
+      WHERE p.is_verified = true
+        AND p.effective_date <= CURRENT_DATE
+      ORDER BY p.effective_date DESC
+    `;
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
