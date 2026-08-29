@@ -12,7 +12,11 @@ type Market = {
   name: string;
 };
 
-function PriceSubmissionForm() {
+type Props = {
+  onSubmitted: () => void;
+};
+
+function PriceSubmissionForm({ onSubmitted }: Props) {
   const [cropId, setCropId] = useState("");
   const [marketId, setMarketId] = useState("");
   const [priceValue, setPriceValue] = useState("");
@@ -62,8 +66,8 @@ function PriceSubmissionForm() {
           cropId,
           marketId,
           priceValue: Number(priceValue),
-          unit,
           effectiveDate,
+          unit,
           submittedBy: "5416e5ac-4105-4c74-a6ba-f7b11bef5256",
           source: "web",
         }),
@@ -78,6 +82,8 @@ function PriceSubmissionForm() {
       setMarketId("");
       setPriceValue("");
       setEffectiveDate("");
+      setUnit("kg");
+      onSubmitted();
     } catch (err) {
       setStatusMessage("Something went wrong. Please try again.");
     } finally {
@@ -86,7 +92,7 @@ function PriceSubmissionForm() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Submit a Price</h2>
 
       <label className="block mb-1 text-sm font-medium text-gray-700">
@@ -121,18 +127,34 @@ function PriceSubmissionForm() {
         ))}
       </select>
 
-      <label className="block mb-1 text-sm font-medium text-gray-700">
-        Price (ETB)
-      </label>
-      <input
-        type="number"
-        min="0.01"
-        step="0.01"
-        value={priceValue}
-        onChange={(e) => setPriceValue(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
-        placeholder="e.g. 45.50"
-      />
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label className="block mb-1 text-sm font-medium text-gray-700">
+            Price (ETB)
+          </label>
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            value={priceValue}
+            onChange={(e) => setPriceValue(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="e.g. 45.50"
+          />
+        </div>
+        <div>
+          <label className="block mb-1 text-sm font-medium text-gray-700">
+            Effective Date
+          </label>
+          <input
+            type="date"
+            min={new Date().toISOString().split("T")[0]}
+            value={effectiveDate}
+            onChange={(e) => setEffectiveDate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+      </div>
 
       <label className="block mb-1 text-sm font-medium text-gray-700">
         Unit
@@ -144,26 +166,14 @@ function PriceSubmissionForm() {
       >
         <option value="kg">kg</option>
         <option value="quintal">quintal</option>
-        <option value="liter">liter</option>
       </select>
-
-      <label className="block mb-1 text-sm font-medium text-gray-700">
-        Effective Date
-      </label>
-      <input
-        type="date"
-        min={new Date().toISOString().split("T")[0]}
-        value={effectiveDate}
-        onChange={(e) => setEffectiveDate(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
-      />
 
       <button
         onClick={handleSubmit}
         disabled={isSubmitting}
         className="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? "Submitting..." : "Submit Price"}
+        {isSubmitting ? "Submitting..." : "Submit for review"}
       </button>
 
       {statusMessage && (

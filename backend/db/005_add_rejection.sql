@@ -1,0 +1,1 @@
+ALTER TABLE prices ADD COLUMN is_rejected BOOLEAN NOT NULL DEFAULT false;

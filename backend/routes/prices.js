@@ -80,6 +80,33 @@ router.patch("/:id/verify", async (req, res) => {
   }
 });
 
+// PATCH /prices/:id/reject — operator rejects a pending price
+router.patch("/:id/reject", async (req, res) => {
+  const { id } = req.params;
+  const { verifiedBy } = req.body;
+
+  if (!verifiedBy) {
+    return res.status(400).json({ error: "verifiedBy is required" });
+  }
+
+  try {
+    const result = await sql`
+      UPDATE prices
+      SET is_rejected = true, verified_by = ${verifiedBy}
+      WHERE id = ${id}
+      RETURNING id, is_verified, is_rejected, verified_by
+    `;
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Price not found" });
+    }
+
+    res.json(result[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /prices/published — public list of currently visible prices
 router.get("/published", async (req, res) => {
   try {
@@ -92,6 +119,24 @@ router.get("/published", async (req, res) => {
       WHERE p.is_verified = true
         AND p.effective_date <= CURRENT_DATE
       ORDER BY p.effective_date DESC
+    `;
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /prices/pending — list unverified prices for operator review
+router.get("/pending", async (req, res) => {
+  try {
+    const result = await sql`
+      SELECT p.id, p.price_value, p.unit, p.effective_date, p.source, p.created_at,
+             c.name_en AS crop_name, m.name AS market_name
+      FROM prices p
+      JOIN crops c ON c.id = p.crop_id
+      JOIN markets m ON m.id = p.market_id
+      WHERE p.is_verified = false AND p.is_rejected = false
+      ORDER BY p.created_at ASC
     `;
     res.json(result);
   } catch (err) {
